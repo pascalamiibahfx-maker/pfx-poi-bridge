@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: pfx-v5-bridge
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT pfx_bridge_server:app
+    healthCheckPath: /health
+    envVars:
+      - key: PFX_BRIDGE_TOKEN
+        sync: false
+      - key: PFX_MAX_QUEUE
+        value: "100"
