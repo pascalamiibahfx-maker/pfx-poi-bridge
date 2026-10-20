@@ -27,7 +27,11 @@ def reject_webhook(reason, status=400, data=None):
     event_type = data.get("event", "poi_fvg_hit") if isinstance(data, dict) else None
     symbol = data.get("symbol") if isinstance(data, dict) else None
     keys = sorted(data.keys()) if isinstance(data, dict) else None
-    print(f"[WEBHOOK_REJECT] reason={reason} event={event_type!r} symbol={symbol!r} keys={keys}", flush=True)
+    print(
+        f"[WEBHOOK_REJECT] reason={reason} event={event_type!r} "
+        f"symbol={symbol!r} keys={keys}",
+        flush=True,
+    )
     return jsonify({"ok": False, "error": reason}), status
 
 
@@ -58,7 +62,11 @@ def webhook():
         required += ["type", "high", "low"]
     missing = [key for key in required if key not in data]
     if missing:
-        print(f"[WEBHOOK_REJECT] reason=missing_fields event={event_type!r} symbol={data.get('symbol')!r} missing={missing}", flush=True)
+        print(
+            f"[WEBHOOK_REJECT] reason=missing_fields event={event_type!r} "
+            f"symbol={data.get('symbol')!r} missing={missing}",
+            flush=True,
+        )
         return jsonify({"ok": False, "error": "missing_fields", "missing": missing}), 400
 
     try:
@@ -76,7 +84,7 @@ def webhook():
             ztype = 2 if int(data["type"]) == 2 else 1
             high = float(data["high"])
             low = float(data["low"])
-            # FIX: read zone_id from the incoming JSON; do not reference an undefined variable.
+            # Read zone_id from the incoming JSON; never reference an undefined variable.
             zone_id = str(data.get("zone_id", "") or "").strip()
     except (ValueError, TypeError, OverflowError):
         return reject_webhook("bad_field_types", data=data)
@@ -85,12 +93,3 @@ def webhook():
         return reject_webhook("invalid_values", data=data)
     if event_type != "trend_state" and high <= low:
         return reject_webhook("invalid_zone_bounds", data=data)
-
-    event_id = f"{symbol}:{event_type}:{event_time}:{signal}:{ztype}:{high}:{low}:{zone_id}"
-    event = {
-        "id": event_id,
-        "event": event_type,
-        "symbol": symbol,
-        "signal": signal,
-        "type": ztype,
-        "high": high,
